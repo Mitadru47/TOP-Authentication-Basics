@@ -41,6 +41,56 @@ const session = require("express-session"); // Dependency used in the background
 app.use(session({ secret: "cats", resave: false, saveUninitialized: true }));
 app.use(passport.session());
 
+// Function one : setting up the LocalStrategy
+
+const LocalStrategy = require("passport-local").Strategy;
+
+passport.use(
+    new LocalStrategy(async (username, password, done) => {
+
+        try{
+
+            const user = User.findOne( { username: username });
+
+            if(!user)
+                return done(null, false, { message: "Incorrect Username" });
+            
+            if(user.password !== password)
+                return done(null, false, { message: "Incorrect Password" });
+
+            return done(null, user);
+        }
+
+        catch(error){
+            return done(error);
+        }
+    })
+);
+
+// Functions two and three: sessions and serialization
+
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
+
+// When a session is created, passport.serializeUser will receive the user object found from a successful login 
+// and store its .id property in the session data.
+  
+passport.deserializeUser(async (id, done) => {
+    
+    try {
+      const user = await User.findById(id);
+      done(null, user);
+    } 
+    
+    catch(err) {
+      done(err);
+    };
+});
+
+// Upon some other request, if it finds a matching session for that request, passport.deserializeUser will retrieve the
+// id we stored in the session data. We then use that id to query our database for the specified user.
+
 // Routing
 
 app.use(express.urlencoded({ extended: false }));
