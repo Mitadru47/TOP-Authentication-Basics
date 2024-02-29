@@ -91,12 +91,32 @@ passport.deserializeUser(async (id, done) => {
 // Upon some other request, if it finds a matching session for that request, passport.deserializeUser will retrieve the
 // id we stored in the session data. We then use that id to query our database for the specified user.
 
+app.use((req, res, next) => {
+
+    res.locals.currentUser = req.user;
+    next();
+});
+
+// To have access to the "currentUser" variable in all of our views without having to manually pass it into 
+// all of the controllers in which we need it.
+
 // Routing
 
 app.use(express.urlencoded({ extended: false }));
 
 app.get("/", (req, res) => res.render("index", { user: req.user }));
 app.post("/log-in", passport.authenticate("local", { successRedirect: "/", failureRedirect: "/" }));
+
+app.get("/log-out", (req, res, next) => {
+    
+    req.logout((err) => {
+
+      if (err) 
+        return next(err);
+      
+      res.redirect("/");
+    });
+});
 
 app.get("/sign-up", (req, res) => res.render("sign-up-form"));
 app.post("/sign-up", async (req, res, next) => {
