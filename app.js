@@ -50,7 +50,7 @@ passport.use(
 
         try{
 
-            const user = User.findOne( { username: username });
+            const user = await User.findOne( { username: username }).exec();
 
             if(!user)
                 return done(null, false, { message: "Incorrect Username" });
@@ -79,7 +79,7 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (id, done) => {
     
     try {
-      const user = await User.findById(id);
+      const user = await User.findById(id).exec();
       done(null, user);
     } 
     
@@ -95,9 +95,10 @@ passport.deserializeUser(async (id, done) => {
 
 app.use(express.urlencoded({ extended: false }));
 
-app.get("/", (req, res) => res.render("index"));
-app.get("/sign-up", (req, res) => res.render("sign-up-form"));
+app.get("/", (req, res) => res.render("index", { user: req.user }));
+app.post("/log-in", passport.authenticate("local", { successRedirect: "/", failureRedirect: "/" }));
 
+app.get("/sign-up", (req, res) => res.render("sign-up-form"));
 app.post("/sign-up", async (req, res, next) => {
 
     try{

@@ -6,4 +6,25 @@ html
 
     body 
         h1 This is the Index Page.
-        a(href="/sign-up") Sign Up
+
+        if user
+            p
+                p Welcome #{user.username}!
+                a(href="/log-out") Log out
+
+        else 
+            p
+                p Please Log in!
+
+                //- instead of POSTing to "/" we’ll add an action so that it POSTs to "/log-in" instead.
+                form(action="/log-in" method="POST")
+
+                    input(name="username" type="text" placeholder="Username")
+                    input(name="password" type="password" placeholder="Password")
+
+                    br
+                
+                    button(type="submit") Log In
+
+            br
+            a(href="/sign-up") Sign up
