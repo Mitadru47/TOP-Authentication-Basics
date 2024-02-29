@@ -19,7 +19,7 @@ const UserSchema = new Schema({
     password: { type: String, required: true } 
 });
 
-// User Model(Collection Prototype) Declaration
+// User Model("users" Collection) Creation
 
 const User = mongoose.model("user", UserSchema);
 
@@ -44,6 +44,23 @@ app.use(passport.session());
 // Routing
 
 app.use(express.urlencoded({ extended: false }));
+
 app.get("/", (req, res) => res.render("index"));
+app.get("/sign-up", (req, res) => res.render("sign-up-form"));
+
+app.post("/sign-up", async (req, res, next) => {
+
+    try{
+
+        const user = new User({ username: req.body.username, password: req.body.password});
+        await user.save();
+
+        res.redirect("/");
+    }
+
+    catch(error){
+        return next(error);
+    }
+});
 
 app.listen(3000, () => console.log("app listening on port 3000!"));
