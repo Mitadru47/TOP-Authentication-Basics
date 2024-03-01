@@ -41,6 +41,8 @@ const session = require("express-session"); // Dependency used in the background
 app.use(session({ secret: "cats", resave: false, saveUninitialized: true }));
 app.use(passport.session());
 
+const bcrypt = require("bcryptjs");
+
 // Function one : setting up the LocalStrategy
 
 const LocalStrategy = require("passport-local").Strategy;
@@ -54,9 +56,20 @@ passport.use(
 
             if(!user)
                 return done(null, false, { message: "Incorrect Username" });
-            
-            if(user.password !== password)
+
+            // Securing passwords with bcrypt
+            // Comparing hashed passwords
+
+            // We will use the bcrypt.compare() function to validate the password input.
+            // The function compares the plain-text password in the request object to the hashed password.
+
+            const match = await bcrypt.compare(password, user.password);
+
+            if(!match)  // passwords do not match!
                 return done(null, false, { message: "Incorrect Password" });
+            
+            // if(user.password !== password)
+            //     return done(null, false, { message: "Incorrect Password" });
 
             return done(null, user);
         }
@@ -123,10 +136,28 @@ app.post("/sign-up", async (req, res, next) => {
 
     try{
 
-        const user = new User({ username: req.body.username, password: req.body.password});
-        await user.save();
 
-        res.redirect("/");
+        // Securing password with bcrypt
+        // Storing hashed passwords
+
+        // Password hashes are the result of passing the user’s password through a one-way hash function,
+        // which maps variable sized inputs to fixed size pseudo-random outputs.
+
+        // The second argument is the length of the “salt” to use in the hashing function; 
+        
+        // Salting a password means adding extra random characters to it, the password plus the extra random characters 
+        // are then fed into the hashing function.
+
+        bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
+
+            if(err)
+                return next(err);
+
+            const user = new User({ username: req.body.username, password: hashedPassword});
+            await user.save();
+    
+            res.redirect("/");   
+        });
     }
 
     catch(error){
